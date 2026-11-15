@@ -4,11 +4,11 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: dairy
-      POSTGRES_PASSWORD: dairy000
+      POSTGRES_PASSWORD: dairy
       POSTGRES_DB: dairy
       TZ: Asia/Karachi
     ports:
-      - "127.0.0.1:5433:5432"
+      - "5433:5432"
     volumes:
       - dbdata:/var/lib/postgresql/data
     healthcheck:
@@ -44,7 +44,7 @@ services:
     environment:
       PGHOST: db
       PGUSER: dairy
-      PGPASSWORD: dairy000
+      PGPASSWORD: dairy
       PGDATABASE: dairy
       RETENTION_DAYS: "30"
     volumes:

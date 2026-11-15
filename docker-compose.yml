@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dairy
+      POSTGRES_PASSWORD: dairy000
+      POSTGRES_DB: dairy
+      TZ: Asia/Karachi
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dairy"]
+      interval: 5s
+      retries: 10
+
+  # Full stack: `docker compose --profile app up -d --build`
+  app:
+    build: .
+    profiles: ["app"]
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://dairy:Dairy2026Strong@db:5432/dairy?schema=public
+      UPLOAD_DIR: /data/uploads
+      TZ: Asia/Karachi
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/data/uploads
+
+  # Nightly pg_dump, keeps 30 days (see scripts/backup.sh)
+  backup:
+    image: postgres:16-alpine
+    profiles: ["app"]
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: dairy
+      PGPASSWORD: dairy000
+      PGDATABASE: dairy
+      RETENTION_DAYS: "30"
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "/backup.sh"]
+
+volumes:
+  dbdata:
+  uploads:
